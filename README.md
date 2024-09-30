@@ -3,4 +3,4 @@
 
 # original README.js
 
-('./docs/~README.md')[here]
+[here](https://github.com/zaramme/node-sql-parser/blob/master/docs/~README.md)
