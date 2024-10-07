@@ -4,21 +4,34 @@ import astToSQL from './sql'
 import { DEFAULT_OPT, setParserOpt } from './util'
 
 class Parser {
+
+  /*
+    @public
+  */
   astify(sql, opt = DEFAULT_OPT) {
     const astInfo = this.parse(sql, opt)
     return astInfo && astInfo.ast
   }
 
+  /*
+    @public
+  */
   sqlify(ast, opt = DEFAULT_OPT) {
     setParserOpt(opt)
     return astToSQL(ast, opt)
   }
 
+  /*
+    @public
+  */
   exprToSQL(expr, opt = DEFAULT_OPT) {
     setParserOpt(opt)
     return exprToSQL(expr)
   }
 
+  /*
+    @private
+  */
   parse(sql, opt = DEFAULT_OPT) {
     const { database = (PARSER_NAME || 'mysql') } = opt
     setParserOpt(opt)
@@ -27,6 +40,9 @@ class Parser {
     throw new Error(`${database} is not supported currently`)
   }
 
+  /*
+    @public
+  */
   whiteListCheck(sql, whiteList, opt = DEFAULT_OPT) {
     if (!whiteList || whiteList.length === 0) return
     const { type = 'table' } = opt
@@ -53,11 +69,17 @@ class Parser {
     if (!hasAuthority) throw new Error(`authority = '${denyInfo}' is required in ${type} whiteList to execute SQL = '${sql}'`)
   }
 
+  /*
+    @public
+  */
   tableList(sql, opt) {
     const astInfo = this.parse(sql, opt)
     return astInfo && astInfo.tableList
   }
 
+  /*
+    @public
+  */
   columnList(sql, opt) {
     const astInfo = this.parse(sql, opt)
     return astInfo && astInfo.columnList
