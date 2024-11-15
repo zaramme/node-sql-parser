@@ -6,7 +6,11 @@ import { DEFAULT_OPT, setParserOpt } from './util'
 class Parser {
 
   /*
+    parse SQL text to AST object
     @public
+    @param {string} sql
+    @param {object} opt option parameters
+    @return AST
   */
   astify(sql, opt = DEFAULT_OPT) {
     const astInfo = this.parse(sql, opt)
@@ -14,7 +18,11 @@ class Parser {
   }
 
   /*
+    convert AST object to sql query
     @public
+    @param {object:AST} ast
+    @param {object} opt option parameters
+    @return string
   */
   sqlify(ast, opt = DEFAULT_OPT) {
     setParserOpt(opt)
@@ -22,7 +30,12 @@ class Parser {
   }
 
   /*
+    convert expr statement to expr object
     @public
+    @param {object:Expr} expr
+    @param {object} opt option parameters
+    @return string
+    @return string
   */
   exprToSQL(expr, opt = DEFAULT_OPT) {
     setParserOpt(opt)
@@ -30,6 +43,7 @@ class Parser {
   }
 
   /*
+    parse sql into object
     @private
   */
   parse(sql, opt = DEFAULT_OPT) {
@@ -41,7 +55,7 @@ class Parser {
   }
 
   /*
-    @public
+    @private
   */
   whiteListCheck(sql, whiteList, opt = DEFAULT_OPT) {
     if (!whiteList || whiteList.length === 0) return
@@ -70,7 +84,7 @@ class Parser {
   }
 
   /*
-    @public
+    @private
   */
   tableList(sql, opt) {
     const astInfo = this.parse(sql, opt)
@@ -78,7 +92,7 @@ class Parser {
   }
 
   /*
-    @public
+    @private
   */
   columnList(sql, opt) {
     const astInfo = this.parse(sql, opt)
