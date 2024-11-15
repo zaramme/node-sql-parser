@@ -4,6 +4,65 @@
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 2.4
 
+import { LocationRange } from "pegjs";
+export type WhilteListCheckMode = "table" | "column";
+export { LocationRange, Location } from "pegjs";
+
+/////////////////////////////////////////////////////
+// AST object interfaces corresponds each type of query (SELECT, UPDATE, INSERT, DELETE...)
+export interface Select {
+  with: With[] | null;
+  type: "select";
+  options: any[] | null;
+  distinct: "DISTINCT" | null;
+  columns: any[] | Column[];
+  from: From[] | null;
+  where: Expr | Function | null;
+  groupby: { columns: ColumnRef[] | null, modifiers: ValueExpr<string>[] };
+  having: any[] | null;
+  orderby: OrderBy[] | null;
+  limit: Limit | null;
+  _orderby?: OrderBy[] | null;
+  _limit?: Limit | null;
+  parentheses_symbol?: boolean;
+  _parentheses?: boolean;
+  loc?: LocationRange;
+}
+
+export interface Insert_Replace {
+  type: "replace" | "insert";
+  db: string | null;
+  table: any;
+  columns: string[] | null;
+  values: InsertReplaceValue[];
+  loc?: LocationRange;
+}
+export interface Update {
+  type: "update";
+  db: string | null;
+  table: Array<From | Dual> | null;
+  set: SetList[];
+  where: Expr | Function | null;
+  loc?: LocationRange;
+}
+export interface Delete {
+  type: "delete";
+  table: any;
+  from: Array<From | Dual>;
+  where: Expr | Function | null;
+  loc?: LocationRange;
+}
+
+/////////////////////////////////////////////////////
+// Child node interfaces of AST
+export interface Column {
+  expr: ExpressionValue;
+  as: ValueExpr<string> | string | null;
+  type?: string;
+  loc?: LocationRange;
+}
+
+export type From = BaseFrom | Join | TableExpr | Dual;
 export interface With {
   name: { value: string };
   stmt: {
@@ -14,11 +73,78 @@ export interface With {
   };
   columns?: any[];
 }
-import { LocationRange } from "pegjs";
 
-export { LocationRange, Location } from "pegjs";
+// Expr object for binary expression (e.g WHERE statement)
+export type Expr =
+  | {
+      type: "binary_expr";
+      operator: "AND" | "OR";
+      left: Expr;
+      right: Expr;
+      loc?: LocationRange;
+      parentheses?: boolean;
+    }
+  | {
+      type: "binary_expr";
+      operator: string;
+      left: ExpressionValue;
+      right: ExpressionValue | ExprList;
+      loc?: LocationRange;
+      parentheses?: boolean;
+    };
 
-export type WhilteListCheckMode = "table" | "column";
+// List of Expr Object
+export type ExprList = {
+  type: "expr_list";
+  value: ExpressionValue[] | Expr;
+  loc?: LocationRange;
+};
+
+// Expr object for single expression (e.g integer and string value, function)
+export type ExpressionValue =
+  | ColumnRef
+  | Param
+  | Value
+  | Function
+  | AggrFunc
+  | Case
+  | Cast
+  | Interval;
+
+////////////////////////////////////////////////////
+// Expr subset interfaces
+export interface ColumnRef {
+  type: "column_ref";
+  table: string | null;
+  column: string | { expr: ValueExpr };
+  loc?: LocationRange;
+}
+
+export type Param = { type: "param"; value: string; loc?: LocationRange };
+
+export type Value = { type: string; value: any; loc?: LocationRange };
+
+// expr to describe function
+export interface Function {
+  type: "function";
+  name: FunctionName;
+  args?: ExprList;
+  suffix?: any;
+  loc?: LocationRange;
+}
+
+// expr for aggregation function (e.g. SUM(), COUNT()...)
+export interface AggrFunc {
+  type: "aggr_func";
+  name: string;
+  args: {
+    expr: ExpressionValue;
+    distinct: "DISTINCT" | null;
+    orderby: OrderBy[] | null;
+    parentheses?: boolean;
+  };
+  loc?: LocationRange;
+}
 export interface ParseOptions {
   includeLocations?: boolean;
 }
@@ -56,7 +182,6 @@ export interface Dual {
   type: "dual";
   loc?: LocationRange;
 }
-export type From = BaseFrom | Join | TableExpr | Dual;
 export interface LimitValue {
   type: string;
   value: number;
@@ -99,12 +224,6 @@ export interface ValueExpr<T = string | number | boolean> {
   value: T;
 }
 
-export interface ColumnRef {
-  type: "column_ref";
-  table: string | null;
-  column: string | { expr: ValueExpr };
-  loc?: LocationRange;
-}
 export interface SetList {
   column: string;
   value: any;
@@ -147,35 +266,11 @@ export interface Cast {
     suffix: unknown[];
   };
 }
-export interface AggrFunc {
-  type: "aggr_func";
-  name: string;
-  args: {
-    expr: ExpressionValue;
-    distinct: "DISTINCT" | null;
-    orderby: OrderBy[] | null;
-    parentheses?: boolean;
-  };
-  loc?: LocationRange;
-}
 
 export type FunctionName = {
   schema?: { value: string; type: string };
   name: ValueExpr<string>[];
 };
-export interface Function {
-  type: "function";
-  name: FunctionName;
-  args?: ExprList;
-  suffix?: any;
-  loc?: LocationRange;
-}
-export interface Column {
-  expr: ExpressionValue;
-  as: ValueExpr<string> | string | null;
-  type?: string;
-  loc?: LocationRange;
-}
 
 export interface Interval {
   type: "interval";
@@ -183,83 +278,7 @@ export interface Interval {
   expr: ValueExpr & { loc?: LocationRange };
 }
 
-export type Param = { type: "param"; value: string; loc?: LocationRange };
 
-export type Value = { type: string; value: any; loc?: LocationRange };
-
-export type ExpressionValue =
-  | ColumnRef
-  | Param
-  | Function
-  | Case
-  | AggrFunc
-  | Value
-  | Cast
-  | Interval;
-export type Expr =
-  | {
-      type: "binary_expr";
-      operator: "AND" | "OR";
-      left: Expr;
-      right: Expr;
-      loc?: LocationRange;
-      parentheses?: boolean;
-    }
-  | {
-      type: "binary_expr";
-      operator: string;
-      left: ExpressionValue;
-      right: ExpressionValue | ExprList;
-      loc?: LocationRange;
-      parentheses?: boolean;
-    };
-
-export type ExprList = {
-  type: "expr_list";
-  value: ExpressionValue[] | Expr;
-  loc?: LocationRange;
-};
-export interface Select {
-  with: With[] | null;
-  type: "select";
-  options: any[] | null;
-  distinct: "DISTINCT" | null;
-  columns: any[] | Column[];
-  from: From[] | null;
-  where: Expr | Function | null;
-  groupby: { columns: ColumnRef[] | null, modifiers: ValueExpr<string>[] };
-  having: any[] | null;
-  orderby: OrderBy[] | null;
-  limit: Limit | null;
-  _orderby?: OrderBy[] | null;
-  _limit?: Limit | null;
-  parentheses_symbol?: boolean;
-  _parentheses?: boolean;
-  loc?: LocationRange;
-}
-export interface Insert_Replace {
-  type: "replace" | "insert";
-  db: string | null;
-  table: any;
-  columns: string[] | null;
-  values: InsertReplaceValue[];
-  loc?: LocationRange;
-}
-export interface Update {
-  type: "update";
-  db: string | null;
-  table: Array<From | Dual> | null;
-  set: SetList[];
-  where: Expr | Function | null;
-  loc?: LocationRange;
-}
-export interface Delete {
-  type: "delete";
-  table: any;
-  from: Array<From | Dual>;
-  where: Expr | Function | null;
-  loc?: LocationRange;
-}
 
 export interface Alter {
   type: "alter";
